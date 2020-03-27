@@ -25,6 +25,7 @@ class elements:
         self.total = self.get_total()
 
     def get_p_generic(self, pierres, poudres):
+        # on ordonne les valeurs de pierres et de poudres par ordre décroissant avec comme identifiant dollars/gramme
         p_generic = []
         for pierre in pierres:
             p_generic.append([pierre[0] / pierre[1], pierre[0], pierre[1]])
@@ -33,24 +34,38 @@ class elements:
                 p_generic.append([poudre[0], poudre[0], 1])
         return sorted(p_generic, reverse=True)
 
-    def get_total(self):
+    def process_total(self):
+        # le process consiste a parcourir la liste des pierres/poudres ordonnées et a les ajouter dans le sac au fur et à mesure, si le sac déborde, on ignore la pierre ou la poudre correspondante
         capacite = self.capacite
-        dollar = 0
+        dollar  = 0
+        # on enregistre une variable pour rollback
+        old_capacite = capacite
         for p in self.p_generic:
             capacite -= p[2]
-            if capacite < 0:
+            # on soustrait la capacite
+            if capacite == 0:
+                # cas final, en ajoutant le montant
+                dollar += p[1]
                 break
+            elif capacite < 0:
+                # cas ou la capacite est négative, on utilise le rollback
+                capacite = old_capacite
+                dollar -= p[1]
+            # cas normal, on ajoute le montant
             dollar += p[1]
-        if capacite != -1:
-        # cas ou il faut maximiser
+            # on fait un commit
+            old_capacite = capacite
+        return dollar, capacite
 
-        return dollar
+    def get_total(self):
+        total, capacite = self.process_total()
+        return total
 
 
 elmts = elements(valeur_pierres, valeur_poudres, C)
 sys.stderr.write(str(elmts.pierres))
 sys.stderr.write(str(elmts.poudres))
-sys.stderr.write(str(elmts.p_generic))
+sys.stderr.write(str(elmts.total) + "\n")
 print(str(elmts.total))
 
 
